@@ -4,3 +4,4 @@ numpy
 Pillow
 opencv-python
 requests
+huggingface_hub
