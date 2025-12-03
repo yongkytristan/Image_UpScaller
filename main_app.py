@@ -24,9 +24,8 @@ def load_onnx_model(model_name: str, repo_id: str, filename: str):
     model_data = None
     
     try:
-        st.info(f"Downloading model '{filename}' from Hugging Face...")
         model_path = hf_hub_download(repo_id=repo_id, filename=filename)
-        st.success(f"Model '{model_name}' successfully loaded into memory from: {model_path}.")
+        st.success(f"Model '{model_name}' successfully loaded into memory.")
         model_data = model_path
         
     except Exception as e:
@@ -310,3 +309,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
