@@ -167,7 +167,7 @@ def display_esrgan_ui():
         st.image(
             lr_pil,
             caption=f"Original Size: {lr_pil.size[0]} × {lr_pil.size[1]} pixels",
-            use_container_width=True
+            width='stretch'
         )
 
         if st.button("Run UpScale", type="primary", key="esrgan_button"):
@@ -191,7 +191,7 @@ def display_esrgan_ui():
                 
                 with col1:
                     st.markdown("##### Low Resolution")
-                    st.image(lr_pil, use_container_width=True)
+                    st.image(lr_pil, width='stretch')
                 with col2:
                     st.markdown("##### Super Resolution")
                     
@@ -204,7 +204,7 @@ def display_esrgan_ui():
                     st.image(
                         sr_pil,
                         caption=caption_text,
-                        use_container_width=True
+                        width='stretch'
                     )
                 
                 buf = io.BytesIO()
@@ -254,7 +254,7 @@ def display_srresnet_ui():
         
 
         st.subheader("Low-Resolution Image (Input)")
-        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", use_container_width=True)
+        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='stretch')
 
         if st.button("Run Upscale", type="primary", key="srresnet_button"):
             with st.spinner("Processing... Please wait, this depends on image size and your CPU speed."):
@@ -278,11 +278,11 @@ def display_srresnet_ui():
                         
                     with col1:
                         st.markdown("##### Low Resolution")
-                        st.image(lr_image, use_container_width=True)
+                        st.image(lr_image, width='stretch')
                     
                     with col2:
                         st.markdown("##### Super Resolution")
-                        st.image(sr_image, caption=caption_text, use_container_width=True)
+                        st.image(sr_image, caption=caption_text, width='stretch')
                     
                     buf = io.BytesIO()
                     sr_image.save(buf, format="PNG")
