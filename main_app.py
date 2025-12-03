@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # --- Model Paths ---
-ESRGAN_PATH_URL = "https://huggingface.co/yongkytristan/UpScaler/resolve/main/esrgan_lite_full_dynamic.onnx"
+ESRGAN_PATH_URL = "https://huggingface.co/yongkytristan/AoL_ComVis/blob/main/esrgan_lite_full_dynamic.onnx"
 # Menggunakan path lokal untuk SRResNet
 SRRESNET_PATH_LOCAL = "srresnet.onnx" 
 
@@ -321,3 +321,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
