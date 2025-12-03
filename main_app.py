@@ -7,6 +7,7 @@ import time
 import io
 import os
 import requests 
+from huggingface_hub import hf_hub_download
 
 st.set_page_config(
     page_title="UpScaling Image AOL ComVis", 
@@ -14,35 +15,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Model Paths ---
-ESRGAN_PATH_URL = "https://huggingface.co/yongkytristan/UpScaler/resolve/main/esrgan_lite_full_dynamic.onnx"
-SRRESNET_PATH_URL = "https://huggingface.co/yongkytristan/UpScaler/resolve/main/srresnet.onnx" 
+ESRGAN_REPO = "yongkytristan/UpScaler"
+ESRGAN_FILENAME = "esrgan_lite_full_dynamic.onnx"
+SRRESNET_FILENAME = "srresnet.onnx" 
 
 @st.cache_resource
-def load_onnx_model(model_name: str, model_source: str, is_url: bool = False):
+def load_onnx_model(model_name: str, repo_id: str, filename: str):
     model_data = None
     
-    if is_url:
-        try:
-            response = requests.get(model_source)
-            response.raise_for_status() # Check for bad HTTP status codes (e.g., 404, 500)
-            model_data = response.content
-            st.success(f"Model '{model_name}' successfully loaded into memory.")
-            
-        except Exception as e:
-            st.error(f"Failed to load model from URL: {model_source}. Ensure the model URL is accessible.")
-            st.exception(e)
-            st.stop()
-            return None, None, None, None
-            
-    else:
-        if not os.path.exists(model_source):
-            st.error(f"Error: ONNX Model '{model_source}' not found.")
-            st.stop()
-            return None, None, None, None
-            
-        st.info(f"Loading model '{model_name}' from local file: {model_source}...")
-        model_data = model_source
+    try:
+        st.info(f"Downloading model '{filename}' from Hugging Face...")
+        model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+        st.success(f"Model '{model_name}' successfully loaded into memory from: {model_path}.")
+        model_data = model_path
+        
+    except Exception as e:
+        st.error(f"Failed to load model from Hugging Face: {repo_id}/{filename}. Ensure the model is public.")
+        st.exception(e)
+        st.stop()
+        return None, None, None, None
 
     try:
         session = ort.InferenceSession(
@@ -133,19 +124,19 @@ def display_esrgan_ui():
     st.markdown(
         """
         This application uses the **ESRGAN-Lite** model to perform image *upscaling*.
-        The model is loaded **directly from Hugging Face into memory** (without saving a local file).
+        The model is loaded from **Hugging Face cache** for reliable deployment.
         """
     )
 
     session, input_name, output_name, input_shape = load_onnx_model(
-        "ESRGAN-Lite", ESRGAN_PATH_URL, is_url=True 
+        "ESRGAN-Lite", ESRGAN_REPO, ESRGAN_FILENAME
     )
     
     if session is None:
         return
 
     st.sidebar.markdown("#### ESRGAN-Lite Model Info")
-    st.sidebar.markdown(f"**Source:** HF URL (In-Memory)")
+    st.sidebar.markdown(f"**Source:** HF Cache (Reliable Load)")
     st.sidebar.markdown("---")
 
     uploaded_file = st.file_uploader(
@@ -167,7 +158,7 @@ def display_esrgan_ui():
         st.image(
             lr_pil,
             caption=f"Original Size: {lr_pil.size[0]} × {lr_pil.size[1]} pixels",
-            width='stretch'
+            width='stretch' # <-- Diubah dari use_container_width=True
         )
 
         if st.button("Run UpScale", type="primary", key="esrgan_button"):
@@ -191,7 +182,7 @@ def display_esrgan_ui():
                 
                 with col1:
                     st.markdown("##### Low Resolution")
-                    st.image(lr_pil, width='stretch')
+                    st.image(lr_pil, width='stretch') # <-- Diubah dari use_container_width=True
                 with col2:
                     st.markdown("##### Super Resolution")
                     
@@ -204,7 +195,7 @@ def display_esrgan_ui():
                     st.image(
                         sr_pil,
                         caption=caption_text,
-                        width='stretch'
+                        width='stretch' # <-- Diubah dari use_container_width=True
                     )
                 
                 buf = io.BytesIO()
@@ -224,19 +215,19 @@ def display_srresnet_ui():
     st.markdown(
         """
         This application uses the **SRResNet** model to perform image *upscaling*. 
-        The model is loaded **directly from Hugging Face into memory** (without saving a local file).
+        The model is loaded from **Hugging Face cache** for reliable deployment.
         """
     )
     
     session, input_name, output_name, input_shape = load_onnx_model(
-        "SRResNet", SRRESNET_PATH_URL, is_url=True 
+        "SRResNet", ESRGAN_REPO, SRRESNET_FILENAME
     )
     
     if session is None:
         return
     
     st.sidebar.markdown("#### SRResNet Model Info")
-    st.sidebar.markdown(f"**Source:** HF URL (In-Memory)")
+    st.sidebar.markdown(f"**Source:** HF Cache (Reliable Load)")
     st.sidebar.markdown("---")
 
     uploaded_file = st.file_uploader(
@@ -254,7 +245,7 @@ def display_srresnet_ui():
         
 
         st.subheader("Low-Resolution Image (Input)")
-        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='stretch')
+        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='stretch') # <-- Diubah dari use_container_width=True
 
         if st.button("Run Upscale", type="primary", key="srresnet_button"):
             with st.spinner("Processing... Please wait, this depends on image size and your CPU speed."):
@@ -278,11 +269,11 @@ def display_srresnet_ui():
                         
                     with col1:
                         st.markdown("##### Low Resolution")
-                        st.image(lr_image, width='stretch')
+                        st.image(lr_image, width='stretch') # <-- Diubah dari use_container_width=True
                     
                     with col2:
                         st.markdown("##### Super Resolution")
-                        st.image(sr_image, caption=caption_text, width='stretch')
+                        st.image(sr_image, caption=caption_text, width='stretch') # <-- Diubah dari use_container_width=True
                     
                     buf = io.BytesIO()
                     sr_image.save(buf, format="PNG")
@@ -309,7 +300,7 @@ def main():
     )
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("Both models (ESRGAN and SRResNet) are loaded directly from Hugging Face URLs into memory.")
+    st.sidebar.caption("Both models (ESRGAN and SRResNet) are loaded reliably from Hugging Face cache using `huggingface_hub`.")
     
     if model_choice == "ESRGAN-Lite":
         display_esrgan_ui()
