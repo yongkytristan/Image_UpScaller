@@ -17,7 +17,7 @@ st.set_page_config(
 
 ESRGAN_REPO = "yongkytristan/AoL_ComVis"
 ESRGAN_FILENAME = "esrgan_lite_full_dynamic.onnx"
-SRRESNET_FILENAME = "srresnet.onnx" 
+SRRESNET_FILENAME = "srresnet_final.onnx" 
 
 @st.cache_resource
 def load_onnx_model(model_name: str, repo_id: str, filename: str):
@@ -311,3 +311,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
