@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-ESRGAN_REPO = "yongkytristan/UpScaler"
+ESRGAN_REPO = "yongkytristan/AoL_ComVis"
 ESRGAN_FILENAME = "esrgan_lite_full_dynamic.onnx"
 SRRESNET_FILENAME = "srresnet.onnx" 
 
@@ -306,5 +306,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
