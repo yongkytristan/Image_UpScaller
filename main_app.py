@@ -7,7 +7,6 @@ import time
 import io
 import os
 import requests 
-from huggingface_hub import hf_hub_download
 
 st.set_page_config(
     page_title="UpScaling Image AOL ComVis", 
@@ -15,24 +14,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-ESRGAN_REPO = "yongkytristan/AoL_ComVis"
-ESRGAN_FILENAME = "esrgan_lite_full_dynamic.onnx"
-SRRESNET_FILENAME = "srresnet.onnx" 
+# --- Model Paths ---
+ESRGAN_PATH_URL = "https://huggingface.co/yongkytristan/UpScaler/resolve/main/esrgan_lite_full_dynamic.onnx"
+# Menggunakan path lokal untuk SRResNet
+SRRESNET_PATH_LOCAL = "srresnet.onnx" 
 
 @st.cache_resource
-def load_onnx_model(model_name: str, repo_id: str, filename: str):
+def load_onnx_model(model_name: str, model_source: str, is_url: bool = False):
     model_data = None
     
-    try:
-        model_path = hf_hub_download(repo_id=repo_id, filename=filename)
-        st.success(f"Model '{model_name}' successfully loaded into memory.")
-        model_data = model_path
-        
-    except Exception as e:
-        st.error(f"Failed to load model from Hugging Face: {repo_id}/{filename}. Ensure the model is public.")
-        st.exception(e)
-        st.stop()
-        return None, None, None, None
+    if is_url:
+        try:
+            response = requests.get(model_source)
+            response.raise_for_status() # Check for bad HTTP status codes (e.g., 404, 500)
+            model_data = response.content
+            st.success(f"Model '{model_name}' successfully loaded into memory from URL.")
+            
+        except Exception as e:
+            st.error(f"Failed to load model from URL: {model_source}. Ensure the model URL is accessible.")
+            st.exception(e)
+            st.stop()
+            return None, None, None, None
+            
+    else:
+        # LOGIKA UNTUK PATH LOKAL
+        if not os.path.exists(model_source):
+            st.error(f"Error: ONNX Model '{model_source}' not found. Please ensure the file is in the same directory.")
+            st.stop()
+            return None, None, None, None
+            
+        model_data = model_source
+        st.success(f"Model '{model_name}' successfully loaded from local path.")
 
     try:
         session = ort.InferenceSession(
@@ -48,6 +60,7 @@ def load_onnx_model(model_name: str, repo_id: str, filename: str):
     except Exception as e:
         st.error(f"Failed to initialize InferenceSession for model: {model_name}")
         st.exception(e)
+        st.stop()
         return None, None, None, None
 
 
@@ -122,19 +135,19 @@ def display_esrgan_ui():
     st.markdown(
         """
         This application uses the **ESRGAN-Lite** model to perform image *upscaling*.
-        The model is loaded from **Hugging Face cache** for reliable deployment.
+        The model is loaded **directly from Hugging Face into memory** (without saving a local file).
         """
     )
 
     session, input_name, output_name, input_shape = load_onnx_model(
-        "ESRGAN-Lite", ESRGAN_REPO, ESRGAN_FILENAME
+        "ESRGAN-Lite", ESRGAN_PATH_URL, is_url=True 
     )
     
     if session is None:
         return
 
     st.sidebar.markdown("#### ESRGAN-Lite Model Info")
-    st.sidebar.markdown(f"**Source:** HF Cache (Reliable Load)")
+    st.sidebar.markdown(f"**Source:** HF URL (In-Memory)")
     st.sidebar.markdown("---")
 
     uploaded_file = st.file_uploader(
@@ -153,12 +166,10 @@ def display_esrgan_ui():
             return
 
         st.subheader("Low-Resolution Image (Input)")
-        # Menghapus width='stretch'
-        st.image( 
+        st.image(
             lr_pil,
             caption=f"Original Size: {lr_pil.size[0]} × {lr_pil.size[1]} pixels",
-            # Mengganti dengan width='content' agar gambar tampil normal (tidak meregang)
-            width='content' 
+            width='stretch' 
         )
 
         if st.button("Run UpScale", type="primary", key="esrgan_button"):
@@ -182,8 +193,7 @@ def display_esrgan_ui():
                 
                 with col1:
                     st.markdown("##### Low Resolution")
-                    # Mengganti dengan width='content'
-                    st.image(lr_pil, width='content')
+                    st.image(lr_pil, width='stretch')
                 with col2:
                     st.markdown("##### Super Resolution")
                     
@@ -193,11 +203,10 @@ def display_esrgan_ui():
                     except ZeroDivisionError:
                          caption_text = f"Result Size: {sr_pil.size[0]} × {sr_pil.size[1]} pixels"
                          
-                    # Mengganti dengan width='content'
                     st.image(
                         sr_pil,
                         caption=caption_text,
-                        width='content'
+                        width='stretch'
                     )
                 
                 buf = io.BytesIO()
@@ -217,19 +226,19 @@ def display_srresnet_ui():
     st.markdown(
         """
         This application uses the **SRResNet** model to perform image *upscaling*. 
-        The model is loaded from **Hugging Face cache** for reliable deployment.
+        The model is loaded **from a local file** (expected as `srresnet.onnx` in the same directory).
         """
     )
     
     session, input_name, output_name, input_shape = load_onnx_model(
-        "SRResNet", ESRGAN_REPO, SRRESNET_FILENAME
+        "SRResNet", SRRESNET_PATH_LOCAL, is_url=False 
     )
     
     if session is None:
         return
     
     st.sidebar.markdown("#### SRResNet Model Info")
-    st.sidebar.markdown(f"**Source:** HF Cache (Reliable Load)")
+    st.sidebar.markdown(f"**Source:** Local File (`{SRRESNET_PATH_LOCAL}`)")
     st.sidebar.markdown("---")
 
     uploaded_file = st.file_uploader(
@@ -247,8 +256,7 @@ def display_srresnet_ui():
         
 
         st.subheader("Low-Resolution Image (Input)")
-        # Mengganti dengan width='content'
-        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='content')
+        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='stretch')
 
         if st.button("Run Upscale", type="primary", key="srresnet_button"):
             with st.spinner("Processing... Please wait, this depends on image size and your CPU speed."):
@@ -272,13 +280,11 @@ def display_srresnet_ui():
                         
                     with col1:
                         st.markdown("##### Low Resolution")
-                        # Mengganti dengan width='content'
-                        st.image(lr_image, width='content')
+                        st.image(lr_image, width='stretch')
                     
                     with col2:
                         st.markdown("##### Super Resolution")
-                        # Mengganti dengan width='content'
-                        st.image(sr_image, caption=caption_text, width='content')
+                        st.image(sr_image, caption=caption_text, width='stretch')
                     
                     buf = io.BytesIO()
                     sr_image.save(buf, format="PNG")
@@ -303,6 +309,9 @@ def main():
         ["ESRGAN-Lite", "SRResNet"],
         index=0, # ESRGAN-Lite as default
     )
+    
+    st.sidebar.markdown("---")
+    st.sidebar.caption("The ESRGAN model is loaded from a Hugging Face URL. The SRResNet model is now loaded from a local file.")
     
     if model_choice == "ESRGAN-Lite":
         display_esrgan_ui()
