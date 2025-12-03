@@ -153,10 +153,11 @@ def display_esrgan_ui():
             return
 
         st.subheader("Low-Resolution Image (Input)")
-        st.image(
+        # --- PERBAIKAN 1 ---
+        st.image( 
             lr_pil,
             caption=f"Original Size: {lr_pil.size[0]} × {lr_pil.size[1]} pixels",
-            width='stretch'
+            # Hapus: width='stretch'
         )
 
         if st.button("Run UpScale", type="primary", key="esrgan_button"):
@@ -180,7 +181,8 @@ def display_esrgan_ui():
                 
                 with col1:
                     st.markdown("##### Low Resolution")
-                    st.image(lr_pil, width='stretch')
+                    # --- PERBAIKAN 2 ---
+                    st.image(lr_pil) # Hapus: width='stretch'
                 with col2:
                     st.markdown("##### Super Resolution")
                     
@@ -190,10 +192,11 @@ def display_esrgan_ui():
                     except ZeroDivisionError:
                          caption_text = f"Result Size: {sr_pil.size[0]} × {sr_pil.size[1]} pixels"
                          
+                    # --- PERBAIKAN 3 ---
                     st.image(
                         sr_pil,
                         caption=caption_text,
-                        width='stretch'
+                        # Hapus: width='stretch'
                     )
                 
                 buf = io.BytesIO()
@@ -243,7 +246,8 @@ def display_srresnet_ui():
         
 
         st.subheader("Low-Resolution Image (Input)")
-        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}", width='stretch')
+        # --- PERBAIKAN 4 ---
+        st.image(lr_image, caption=f"Original Size: {lr_image.width}x{lr_image.height}") # Hapus: width='stretch'
 
         if st.button("Run Upscale", type="primary", key="srresnet_button"):
             with st.spinner("Processing... Please wait, this depends on image size and your CPU speed."):
@@ -267,11 +271,13 @@ def display_srresnet_ui():
                         
                     with col1:
                         st.markdown("##### Low Resolution")
-                        st.image(lr_image, width='stretch')
+                        # --- PERBAIKAN 5 ---
+                        st.image(lr_image) # Hapus: width='stretch'
                     
                     with col2:
                         st.markdown("##### Super Resolution")
-                        st.image(sr_image, caption=caption_text, width='stretch')
+                        # --- PERBAIKAN 6 ---
+                        st.image(sr_image, caption=caption_text) # Hapus: width='stretch'
                     
                     buf = io.BytesIO()
                     sr_image.save(buf, format="PNG")
@@ -305,7 +311,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
