@@ -48,7 +48,6 @@ def load_onnx_model(model_name: str, repo_id: str, filename: str):
     except Exception as e:
         st.error(f"Failed to initialize InferenceSession for model: {model_name}")
         st.exception(e)
-        st.stop()
         return None, None, None, None
 
 
@@ -306,6 +305,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
