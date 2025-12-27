@@ -1,7 +1,0 @@
-streamlit
-onnxruntime
-numpy
-Pillow
-opencv-python
-requests
-huggingface_hub
