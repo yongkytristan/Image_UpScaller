@@ -13,14 +13,20 @@ ESRGAN-Lite – Lightweight perceptual model optimized for visual realism
 The study quantifies the trade-off between objective reconstruction accuracy and perceptual fidelity, using the DIV2K dataset.
 
 👥 Team Members
+
 Michael Ivan Santoso (2702300120)
+
 Raymond Surya Setiawan (2702303343)
+
 Yongky Alexander Tristan (2702254676)
 
 🚀 Demo & Deployment
+
 🌐 Streamlit App:
 https://imageenhancercompvis.streamlit.app/
+
 📦 Source Code:
 https://github.com/yongkytristan/Image_UpScaller
+
 🎥 Video Demo:
 https://youtu.be/Z0oFJU3B0Ls
